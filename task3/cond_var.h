@@ -3,21 +3,25 @@
 
 #include <stdatomic.h>
 
-/*
- * Define the condition variable type.
- * Write your struct details in this file.
- */
-typedef struct {
-    // write your implementation here
-} condition_variable condition_variable;
 
 /*
  * Define the ticket lock type, which may be used as the external lock.
  * Write your struct details in this file.
  */
 typedef struct {
-    // write your implementation here
-} ticket_lock ticket_lock;
+    atomic_int ticket;
+    atomic_int cur_ticket;
+} ticket_lock;
+
+/*
+ * Define the condition variable type.
+ * Write your struct details in this file.
+ */
+typedef struct {
+    atomic_int signal_count;
+    atomic_int waiting_count;
+} condition_variable;
+
 
 /*
  * Initializes the condition variable pointed to by 'cv'.
