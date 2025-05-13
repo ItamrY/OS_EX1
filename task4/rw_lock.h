@@ -2,14 +2,22 @@
 #define RW_LOCK_H
 
 #include <stdatomic.h>
+#include "../task2/ticket_lock.h"
+#include "../task3/cond_var.h"
 
 /*
- * Define the read-write lock type.
- * Write your struct details in this file..
+ * A fair read-write lock that allows multiple readers or one writer.
+ * Writers are given priority to prevent starvation.
  */
 typedef struct {
-    // write your implementation here
-} rwlock rwlock;
+    ticket_lock lock;               // internal mutual exclusion lock
+    condition_variable readers_ok;  // condition variable for waiting readers
+    condition_variable writers_ok;  // condition variable for waiting writers
+
+    atomic_int active_readers;      // number of readers holding the lock
+    atomic_int active_writers;      // 1 if a writer holds the lock, 0 otherwise
+    atomic_int waiting_writers;     // number of writers waiting
+} rwlock;
 
 /*
  * Initializes the read-write lock.
@@ -27,7 +35,7 @@ void rwlock_acquire_read(rwlock* lock);
 void rwlock_release_read(rwlock* lock);
 
 /*
- * Acquires the lock for writing. This operation should ensure exclusive access.
+ * Acquires the lock for writing. Ensures exclusive access.
  */
 void rwlock_acquire_write(rwlock* lock);
 

@@ -1,4 +1,9 @@
-#include "rwlock.h"
+#include "rw_lock.h"
+#include "pthread.h"
+#include <stdio.h>
+#include "../task2/ticket_lock.h"
+#include "../task3/cond_var.h"
+
 
 #define NUM_READERS 10
 #define READER 0
