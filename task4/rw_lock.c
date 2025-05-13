@@ -1,74 +1,64 @@
 #include "rw_lock.h"
 #include <sched.h>
+#include "../task3/cond_var.h"
+// #include "../task2/ticket_lock.c"
+
+// void ticketlock_init(ticket_lock* lock);
+// int ticketlock_acquire(ticket_lock* lock);
+// void ticketlock_release(ticket_lock* lock);
 
 void rwlock_init(rwlock* lock) {
-    ticketlock_init(&lock->lock);
-    condition_variable_init(&lock->readers_ok);
-    condition_variable_init(&lock->writers_ok);
-    atomic_init(&lock->active_readers, 0);
-    atomic_init(&lock->active_writers, 0);
-    atomic_init(&lock->waiting_writers, 0);
+    atomic_init(&lock->readers_amount, 0);
+    atomic_init(&lock->writer_active, 0);
+    atomic_init(&lock->writer_waiting, 0);
+
 }
 
 
 void rwlock_acquire_read(rwlock* lock) {
-    ticketlock_acquire(&lock->lock);
+    while (1) {
+        // Wait while a writer is active or waiting
+        while (atomic_load(&lock->writer_active) || atomic_load(&lock->writer_waiting)) {
+            sched_yield();
+        }
 
-    // Wait while a writer is active or waiting (to prevnet writer starvation)
-    while (atomic_load(&lock->active_writers) > 0 || atomic_load(&lock->waiting_writers) > 0) {
-        condition_variable_wait(&lock->readers_ok, &lock->lock);
+        // increment reader amount
+        atomic_fetch_add(&lock->readers_amount, 1);
+
+        ///////check
+        // Double-check that a writer didn’t slip in
+        if (!atomic_load(&lock->writer_active) && !atomic_load(&lock->writer_waiting)) {
+            break; // Safe to read
+        }
+
+        // Undo and try again
+        atomic_fetch_sub(&lock->readers_amount, 1);
+        sched_yield();
     }
-
-    atomic_fetch_add(&lock->active_readers, 1);
-
-    ticketlock_release(&lock->lock);
 }
 
 
 void rwlock_release_read(rwlock* lock) {
-    ticketlock_acquire(&lock->lock);
-
-    atomic_fetch_sub(&lock->active_readers, 1);
-
-    // If this was the last reader and writers are waiting, signal one
-    if (atomic_load(&lock->active_readers) == 0 && atomic_load(&lock->waiting_writers) > 0) {
-        condition_variable_signal(&lock->writers_ok);
-    }
-
-    ticketlock_release(&lock->lock);
+    atomic_fetch_sub(&lock->readers_amount, 1);
 }
 
 
 void rwlock_acquire_write(rwlock* lock) {
-    ticketlock_acquire(&lock->lock);
+    // Signal writer is waiting
+    atomic_store(&lock->writer_waiting, 1);
 
-    atomic_fetch_add(&lock->waiting_writers, 1);
-
-    // Wait while any readers or another writer is active
-    //while (atomic_load(&lock->active_readers) > 0 || atomic_load(&lock->active_writers) > 0) {
-    while (atomic_load(&lock->active_writers) > 0) {
-
-        condition_variable_wait(&lock->writers_ok, &lock->lock);
+    // Wait for all readers to exit
+    while (atomic_load(&lock->readers_amount) > 0) {
+        sched_yield();
     }
 
-    atomic_fetch_sub(&lock->waiting_writers, 1);
-    atomic_store(&lock->active_writers, 1);
+    // Begin writing
+    atomic_store(&lock->writer_active, 1);
+    atomic_store(&lock->writer_waiting, 0);
 
-    ticketlock_release(&lock->lock);
 }
 
 
 void rwlock_release_write(rwlock* lock) {
-    ticketlock_acquire(&lock->lock);
-
-    atomic_store(&lock->active_writers, 0);
-
-    // Prefer writers over readers to prevent writer starvation
-    if (atomic_load(&lock->waiting_writers) > 0) {
-        condition_variable_signal(&lock->writers_ok);
-    } else {
-        condition_variable_broadcast(&lock->readers_ok);
-    }
-
-    ticketlock_release(&lock->lock);
+    atomic_store(&lock->writer_active, 0);
 }

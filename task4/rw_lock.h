@@ -2,21 +2,15 @@
 #define RW_LOCK_H
 
 #include <stdatomic.h>
-#include "../task2/ticket_lock.h"
-#include "../task3/cond_var.h"
 
 /*
  * A fair read-write lock that allows multiple readers or one writer.
  * Writers are given priority to prevent starvation.
  */
 typedef struct {
-    ticket_lock lock;               // internal mutual exclusion lock
-    condition_variable readers_ok;  // condition variable for waiting readers
-    condition_variable writers_ok;  // condition variable for waiting writers
-
-    atomic_int active_readers;      // number of readers holding the lock
-    atomic_int active_writers;      // 1 if a writer holds the lock, 0 otherwise
-    atomic_int waiting_writers;     // number of writers waiting
+    atomic_bool writer_active;      //true if a writer is currently writing
+    atomic_bool writer_waiting;     //treu if writer is waiting to go in
+    atomic_int readers_amount;      // amount of readers at any given time
 } rwlock;
 
 /*

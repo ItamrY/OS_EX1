@@ -1,9 +1,7 @@
 #include "rw_lock.h"
 #include "pthread.h"
 #include <stdio.h>
-#include "../task2/ticket_lock.h"
-#include "../task3/cond_var.h"
-
+#include <unistd.h>
 
 #define NUM_READERS 10
 #define READER 0
@@ -70,5 +68,7 @@ int main()
     {
         pthread_join(threads[i], NULL);
     }
+    printf("✅ Test passed: multiple readers entered simultaneously\n");
+
     return 0;
 }
