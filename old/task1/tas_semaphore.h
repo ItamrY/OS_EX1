@@ -1,6 +1,5 @@
 #ifndef TAS_SEMAPHORE_H
 #define TAS_SEMAPHORE_H
-#include "tas_spinlock.h"
 
 #include <stdatomic.h>
 
@@ -9,8 +8,9 @@
  * Write your struct details in this file..
  */
 typedef struct {
-    int available_resources;
-    spinlock_t lock;
+    atomic_int available_resources;
+    int max_resources;
+    atomic_flag spinlock;
 } semaphore;
 
 /*

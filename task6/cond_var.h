@@ -4,24 +4,27 @@
 #include <stdatomic.h>
 
 
-// Define the ticket lock type, which may be used as the external lock.
- 
+/*
+ * Define the ticket lock type, which may be used as the external lock.
+ * Write your struct details in this file.
+ */
 typedef struct {
     atomic_int ticket;
     atomic_int cur_ticket;
 } ticket_lock;
 
-// forward decaration of function ticket_lock - necessary in .h file for when it is called by other files or tests
-void ticketlock_init(ticket_lock* lock);
-int ticketlock_acquire(ticket_lock* lock);
-void ticketlock_release(ticket_lock* lock);
-
-//Define the condition variable type.
-
+/*
+ * Define the condition variable type.
+ * Write your struct details in this file.
+ */
 typedef struct {
     atomic_int signal_count;
     atomic_int waiting_count;
 } condition_variable;
+
+void ticketlock_init(ticket_lock* lock);
+int ticketlock_acquire(ticket_lock* lock);
+void ticketlock_release(ticket_lock* lock);
 
 
 /*

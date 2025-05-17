@@ -1,11 +1,7 @@
 #include "rw_lock.h"
 #include <sched.h>
 #include "../task3/cond_var.h"
-// #include "../task2/ticket_lock.c"
 
-// void ticketlock_init(ticket_lock* lock);
-// int ticketlock_acquire(ticket_lock* lock);
-// void ticketlock_release(ticket_lock* lock);
 
 void rwlock_init(rwlock* lock) {
     atomic_init(&lock->readers_amount, 0);

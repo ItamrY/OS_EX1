@@ -24,6 +24,8 @@ void wait_until_producers_produced_all_numbers();
 /*
  * wait until queue is empty, if queue is already empty - return immediately without waiting.
  */
-void  wait_consumers_queue_empty();
+void wait_consumers_queue_empty();
+
+void NewFunction();
 
 #endif // CP_PATTERN_H

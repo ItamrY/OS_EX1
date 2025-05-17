@@ -1,64 +1,33 @@
-// #include "tl_semaphore.h"
-// #include <stdio.h>
-
-// void semaphore_init(semaphore* sem, int initial_value) {
-//     sem->available_resources = initial_value;
-//     ticketlock_init(&sem->tl); // Initialize the spinlock to be unlocked
-// }
-
-
-// void semaphore_wait(semaphore* sem) {
-//     int my_ticket = atomic_fetch_add(&sem->tl.ticket, 1); // get ticket
-
-//     while (1) {
-//         while (atomic_load(&sem->tl.cur_ticket) != my_ticket) {
-//             sched_yield();
-//         }
-
-//         if (sem->available_resources > 0) {
-//             sem->available_resources--;
-//             printf("Thread got ticket #%d and acquired semaphore\n", my_ticket);
-//             ticketlock_release(&sem->tl);
-//             return;
-//         }
-
-//         sched_yield();
-//     }
-// }
-
-// void semaphore_signal(semaphore* sem) {
-//     ticketlock_release(&sem->tl);
-//     sem->available_resources++;
-//     ticketlock_release(&sem->tl);
-// }
-
 #include "tl_semaphore.h"
 #include <stdio.h>
+#include <sched.h>
 
 void semaphore_init(semaphore* sem, int initial_value) {
-    sem->available_resources = initial_value;
-    ticketlock_init(&sem->tl);
+    atomic_init(&sem->available_resources, initial_value);
+    sem->max_resources = initial_value;
+
+    atomic_init(&sem->ticket, 0);
+    atomic_init(&sem->cur_ticket, 0);
 }
 
+// COMPARE WITH SOMEONE
 void semaphore_wait(semaphore* sem) {
-    while (1) {
-        int my_ticket = ticketlock_acquire(&sem->tl);  // this blocks until it's our turn
+    int my_ticket = atomic_fetch_add(&sem->ticket, 1);
 
-        if (sem->available_resources > 0) {
-            sem->available_resources--;
-            printf("Thread got ticket #%d and acquired semaphore\n", my_ticket);
-            ticketlock_release(&sem->tl);
-            return;
-        }
-
-        ticketlock_release(&sem->tl);  // not our turn, give it to next thread
-        sched_yield();                 // let others run
+    while (atomic_load(&sem->cur_ticket) < my_ticket || atomic_load(&sem->available_resources) == 0) {
+        sched_yield();
     }
+    
+    atomic_fetch_sub(&sem->available_resources, 1);
+    atomic_fetch_add(&sem->cur_ticket, 1);
+    printf("Thread got ticket #%d and acquired semaphore\n", my_ticket);              
 }
 
 void semaphore_signal(semaphore* sem) {
-    ticketlock_acquire(&sem->tl);
-    sem->available_resources++;
-    ticketlock_release(&sem->tl);
+    if (sem->available_resources < sem->max_resources) {
+            atomic_fetch_add(&sem->available_resources, 1);
+    }
 }
+
+
 

@@ -3,10 +3,6 @@
 #include <stdbool.h>
 
 // Ticket lock function declarations
-void ticketlock_init(ticket_lock* lock);
-int ticketlock_acquire(ticket_lock* lock);
-void ticketlock_release(ticket_lock* lock);
-
 
 void condition_variable_init(condition_variable* cv) {
     // TODO: Initialize internal fields.

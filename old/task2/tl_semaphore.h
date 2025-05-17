@@ -1,7 +1,6 @@
 #ifndef TL_SEMAPHORE_H
 #define TL_SEMAPHORE_H
 
-#include "ticket_lock.h"
 #include <stdatomic.h>
 
 /*
@@ -9,8 +8,10 @@
  * Write your struct details in this file..
  */
 typedef struct {
-    int available_resources;
-    ticket_lock tl;
+    atomic_int available_resources;
+    int max_resources;
+    atomic_int ticket;
+    atomic_int cur_ticket;
 } semaphore;
 
 /*

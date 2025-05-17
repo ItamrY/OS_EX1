@@ -20,7 +20,7 @@ void semaphore_wait(semaphore* sem) {
     
     atomic_fetch_sub(&sem->available_resources, 1);
     atomic_fetch_add(&sem->cur_ticket, 1);
-    printf("Thread got ticket #%d and acquired semaphore\n", my_ticket);              
+    // printf("Thread got ticket #%d and acquired semaphore\n", my_ticket);              
 }
 
 void semaphore_signal(semaphore* sem) {

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <string.h>
-#include "tas_semaphore.h"
+#include "tl_semaphore.h"
 
 #define THREADS 16
 
@@ -50,5 +50,6 @@ int main(void)
         printf("Value is %d, expected %d\n", x, THREADS);
         fprintf(stderr, "Failed!");
     }
+    printf("Value of x is %d, expected %d\n", x, THREADS);
     return 0;
 }
